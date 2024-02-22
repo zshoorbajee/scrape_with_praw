@@ -26,7 +26,7 @@ def time_check(start=None):
 #########################################
 
 ## Name of subreddit you are scraping
-sub_name = 'askreddit' 
+sub_name = 'irs' 
 
 ## Manner of sorting submissions
 ## Supported: new, top, hot
@@ -40,17 +40,17 @@ time_filter = 'all'
 output_dir = './data'
 
 ## Location of API client ID and secret
-with open('../../../.secret/reddit/ZSDSFI_client_id.txt') as f:
+with open('../../../.secret/reddit/ZS_BI_client_id.txt') as f:
     client_id = f.read()
 
-with open('../../../.secret/reddit/ZSDSFI_client_secret.txt') as f:
+with open('../../../.secret/reddit/ZS_BI_client_secret.txt') as f:
     client_secret = f.read()
 
 ## Set up API 
 reddit = praw.Reddit(
     client_id=client_id,
     client_secret=client_secret,
-    user_agent="ZS"
+    user_agent="BI_Tools"
 )
 
 #########################################
@@ -136,38 +136,48 @@ def get_posts_data(
     If drop_24 is True, drops any submissions less than 24 hours old, which may
     not have a sufficient number of comments/votes for analysis.
     """
-    _df = submission_df.copy()
-    _df['title'] = _df['submission'].apply(lambda x: x.title)
-    _df['created_utc'] = _df['submission'].apply(lambda x: x.created_utc)
+    
+    mapper = {
+        'title': lambda x: x.title,
+        'created_utc': lambda x: x.created_utc,
+        'id': lambda x: x.id,
+        'url': lambda x: x.url,
+        'is_self': lambda x: x.is_self,
+        'selftext': lambda x: x.selftext,
+        'post_hint': lambda x: x.post_hint if 'post_hint' in vars(x) else None,
+        'score': lambda x: x.score,
+        'upvote_ratio': lambda x: x.upvote_ratio,
+        'num_comments': lambda x: x.num_comments
+    }
+
+    _df = submission_df.copy()  
+    # There is occasionally an HTTP 429 error with the next section, but simply running each extraction again usually works.
+    # The code repeats until it doesn't throw an error or reaches max_attempts.
+    for column, function, in mapper.items():
+        attempt = 1
+        try_again = True
+        while ((attempt <= max_attempts) and (try_again == True)):
+            try:
+                _df[column] = _df['submission'].apply(function)
+                try_again = False
+                print(f'Successfully extracted {column} on attempt {attempt}.')
+            except:
+                print(f'Attempt {attempt} of extracting {column} failed. Max attempts = {max_attempts}.')
+                attempt += 1
+                try_again = True
+                if attempt > max_attempts:
+                    raise Exception('*** Max attempts of extracting comments reached ***')
+                else:
+                    time.sleep(sleep)
     _df['datetime'] = _df['created_utc'].apply(lambda x: dt.datetime.fromtimestamp(x))
     _df['submission_age'] = _df['date_retrieved'] - _df['datetime']
-    _df['id'] = _df['submission'].apply(lambda x: x.id)
-    _df['url'] = _df['submission'].apply(lambda x: x.url)
-    _df['is_self'] = _df['submission'].apply(lambda x: x.is_self)
-    _df['selftext'] = _df['submission'].apply(lambda x: x.selftext)
-    _df['post_hint'] = _df['submission'].apply(lambda x: x.post_hint if 'post_hint' in vars(x) else None)
-    _df['score'] = _df['submission'].apply(lambda x: x.score)
-    _df['upvote_ratio'] = _df['submission'].apply(lambda x: x.upvote_ratio)
-    _df['num_comments'] = _df['submission'].apply(lambda x: x.num_comments)
 
-    # There is occasionally an HTTP 429 error with the next section, but simply running it again usually works.
-    # The code repeats until it doesn't throw an error or reaches max_attempts.
-    
-    attempt = 1
-    try_again = True
-    while ((attempt <= max_attempts) and (try_again == True)):
-        try:
-            _df['comments'] = _df['submission'].apply(lambda x: x.comments)
-            try_again = False
-            print(f'Successfully extracted comments on attempt {attempt}.')
-        except:
-            print(f'Attempt {attempt} of extracting comments failed. Max attempts = {max_attempts}.')
-            attempt += 1
-            try_again = True
-            if attempt > max_attempts:
-                raise Exception('*** Max attempts of extracting comments reached ***')
-            else:
-                time.sleep(sleep)
+    # Reorder DF
+    _df = _df[[
+        'submission', 'id', 'subreddit', 'title', 'url', 'selftext', 'is_self', 'post_hint', 'score', 'upvote_ratio', 'num_comments', 
+        'created_utc', 'datetime', 'date_retrieved', 'submission_age'
+        ]]
+
     return _df
 
 ### Getting submissions  ###
@@ -177,25 +187,7 @@ print('\n')
 
 
 ### Extracting data from submissions ###
-# This section repeats until there is no HTTP 429 error or it reaches max_attempts.
-
-attempt = 1
-max_attempts = 10
-try_again = True
-sleep = 30
-while ((attempt <= max_attempts) and (try_again)):
-    try:
-        df = get_posts_data(df)
-        try_again = False
-        print(f'Successfully extracted submission data on attempt {attempt}.')
-    except:
-        print(f'Attempt {attempt} of extracting submission data failed. Max attempts = {max_attempts}.')
-        attempt += 1
-        try_again = True
-        if attempt > max_attempts:
-            raise Exception('*** Max attempts of get_posts_data() reached ***')
-        else:
-            time.sleep(sleep)
+df = get_posts_data(df, max_attempts=10, sleep=30)
 print('\n')
 
 ### Display data info ###
@@ -212,7 +204,7 @@ else:
 
 filename = f'{sub_name}_{sort_type}_reddit_data_{time_run.strftime("%m_%d_%Y")}.pkl'
 
-filepath = os.path.join(output_dir + filename)
+filepath = os.path.join(output_dir, filename)
 
 ### Save file ###
 df.to_pickle(filepath)
@@ -223,7 +215,6 @@ print('\n')
 time_check()
 print('\n')
 
-print('\n')
 print('#'*50)
 print(f"Script ended at {dt.datetime.now().strftime('%H:%M:%S')}")
 print('#'*50)
