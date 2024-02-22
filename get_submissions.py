@@ -31,7 +31,7 @@ sub_name = 'askreddit'
 
 ## Manner of sorting submissions
 ## Supported: new, top, hot
-sort_by = 'new'
+sort_by = 'top'
 
 ## Time filter
 ## Supported: all, year, month, week, day, hour
@@ -148,7 +148,8 @@ def get_posts_data(
         'post_hint': lambda x: x.post_hint if 'post_hint' in vars(x) else None,
         'score': lambda x: x.score,
         'upvote_ratio': lambda x: x.upvote_ratio,
-        'num_comments': lambda x: x.num_comments
+        'num_comments': lambda x: x.num_comments,
+        'comments': lambda x: x.comments
     }
 
     _df = submission_df.copy()  
@@ -175,7 +176,7 @@ def get_posts_data(
 
     # Reorder DF
     _df = _df[[
-        'submission', 'id', 'subreddit', 'title', 'url', 'selftext', 'is_self', 'post_hint', 'score', 'upvote_ratio', 'num_comments', 
+        'submission', 'id', 'subreddit', 'title', 'url', 'selftext', 'is_self', 'post_hint', 'score', 'upvote_ratio', 'num_comments', 'comments',
         'created_utc', 'datetime', 'date_retrieved', 'submission_age'
         ]]
 
