@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import json
 import datetime as dt
 import os
 import praw
@@ -26,7 +27,7 @@ def time_check(start=None):
 #########################################
 
 ## Name of subreddit you are scraping
-sub_name = 'irs' 
+sub_name = 'askreddit' 
 
 ## Manner of sorting submissions
 ## Supported: new, top, hot
@@ -40,17 +41,17 @@ time_filter = 'all'
 output_dir = './data'
 
 ## Location of API client ID and secret
-with open('../../../.secret/reddit/ZS_BI_client_id.txt') as f:
-    client_id = f.read()
+with open('../../../.secret/reddit_api.json', 'r') as f:
+    client = json.load(f)
 
-with open('../../../.secret/reddit/ZS_BI_client_secret.txt') as f:
-    client_secret = f.read()
+client_id = client['api_key']
+client_secret = client['secret']
 
 ## Set up API 
 reddit = praw.Reddit(
     client_id=client_id,
     client_secret=client_secret,
-    user_agent="BI_Tools"
+    user_agent="ZS"
 )
 
 #########################################
