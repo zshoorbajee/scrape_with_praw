@@ -4,6 +4,7 @@ import json
 import datetime as dt
 import os
 import praw
+from prawcore.exceptions import TooManyRequests
 import re
 import string
 import time
@@ -163,7 +164,7 @@ def get_posts_data(
                 _df[column] = _df['submission'].apply(function)
                 try_again = False
                 print(f'Successfully extracted {column} on attempt {attempt}.')
-            except:
+            except TooManyRequests:
                 print(f'Attempt {attempt} of extracting {column} failed. Max attempts = {max_attempts}.')
                 attempt += 1
                 try_again = True
