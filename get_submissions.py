@@ -26,7 +26,7 @@ def time_check(start=None):
 #########################################
 
 ## Name of subreddit you are scraping
-sub_name = 'irs' 
+sub_name = 'askreddit' 
 
 ## Manner of sorting submissions
 ## Supported: new, top, hot
