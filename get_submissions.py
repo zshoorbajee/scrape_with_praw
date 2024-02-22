@@ -205,7 +205,7 @@ if sort_by in ['new', 'hot', 'rising']:
 else:
     sort_type = f'{sort_by}_{time_filter}'
 
-filename = f'{sub_name}_{sort_type}_reddit_data_{time_run.strftime("%m_%d_%Y")}.pkl'
+filename = f'{time_run.strftime("%Y%m%d")}_{sub_name}_{sort_type}_reddit_data.pkl'
 
 filepath = os.path.join(output_dir, filename)
 
