@@ -54,11 +54,16 @@ for file in filenames:
     _df = pd.read_pickle(filepath)
     df = pd.concat([df, _df])
     print(f'Added {file} to combined file.')
+
+df.sort_values(by=['datetime', 'submission_age'], ascending=False, inplace=True)
+df.drop_duplicates(subset=['id'], keep='first', inplace=True)
+df.to_pickle(output_path)
+assert os.path.exists(output_path)
+
+# Delete inbound files
+for file in filenames:
     if delete_combined:
         os.remove(filepath)
         print(f'Deleted {file}', '\n')
     else:
         print('\n')
-df.sort_values(by=['datetime', 'submission_age'], ascending=False, inplace=True)
-df.drop_duplicates(subset=['id'], keep='first', inplace=True)
-df.to_pickle(output_path)
