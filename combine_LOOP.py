@@ -28,14 +28,14 @@ sort_by = 'new'
 file_dir = './data'
 output_dir = './data/combined'
 
+## Whether to delete already merged files
+delete_combined = False
+
 for sub_name in sub_names:
     
     ## Name and path of the combined DataFrame
     name = f'combined_{sort_by}_submissions_{sub_name}_reddit.pkl'
     output_path = os.path.join(output_dir, name)
-
-    ## Whether to delete already merged files
-    delete_combined = False
 
     ## Creates a "combined" directory if it doesn't already exists
     if not os.path.exists(output_dir):
