@@ -29,7 +29,7 @@ name = f'combined_{sort_by}_submissions_{sub_name}_reddit.pkl'
 output_path = os.path.join(output_dir, name)
 
 ## Whether to delete already merged files
-delete_combined = False
+delete_combined = True
 
 ## Creates a "combined" directory if it doesn't already exists
 if not os.path.exists(output_dir):
@@ -37,7 +37,7 @@ if not os.path.exists(output_dir):
 
 ## Grab all filenames matching desired subreddit and sort/filter
 filenames = os.listdir(file_dir)
-filenames = [x for x in filenames if ((sort_by in x) & (sub_name in x))]
+filenames = [x for x in filenames if ((sort_by in x) & (f'_{sub_name}_' in x))]
 filenames = sorted(filenames)[::-1]
 
 # Start a combined dataframe
@@ -62,6 +62,7 @@ assert os.path.exists(output_path)
 
 # Delete inbound files
 for file in filenames:
+    filepath = os.path.join(file_dir, file)
     if delete_combined:
         os.remove(filepath)
         print(f'Deleted {file}', '\n')
